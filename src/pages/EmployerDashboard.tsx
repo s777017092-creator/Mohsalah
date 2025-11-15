@@ -59,6 +59,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
 import ATSApplicationsView from '../components/admin/ATSApplicationsView'
+import CreateJobModal from '../components/employer/CreateJobModal'
 
 // Types
 type JobStatus = 'published' | 'pending' | 'rejected' | 'expired'
@@ -312,26 +313,6 @@ function EmployerDashboard() {
   const [talentResults, setTalentResults] = useState<TalentResult[]>([])
   const [markedTalent, setMarkedTalent] = useState<Record<number, ApplicantStatus>>({})
 
-  // Job form state with enhanced fields
-  const [jobForm, setJobForm] = useState({
-    title: '',
-    department: '',
-    location: '',
-    type: '',
-    salary: '',
-    description: '',
-    requirements: '',
-    skills: '',
-    experience: '',
-    education: '',
-    benefits: '',
-    companyDescription: '',
-    workingHours: '',
-    remote: false,
-    urgent: false,
-    featured: false
-  })
-
   // Talent search form
   const [talentSearchForm, setTalentSearchForm] = useState({
     title: '',
@@ -343,57 +324,7 @@ function EmployerDashboard() {
     salary: ''
   })
 
-  const handleJobSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    
-    try {
-      const newJob = {
-        id: Date.now(),
-        ...jobForm,
-        postedAt: new Date().toISOString().split('T')[0],
-        status: 'pending',
-        applications: 0,
-        views: 0,
-        saves: 0,
-        urgency: jobForm.urgent ? 'High' : 'Medium',
-        applicants: [],
-        analytics: {
-          dailyViews: Array(7).fill(0),
-          topSources: [],
-          applicationTrend: Array(7).fill(0)
-        }
-      }
-      
-      setMyJobs(prev => [...prev, newJob])
-      setShowJobForm(false)
-      resetJobForm()
-      
-      toast.success('تم إرسال الوظيفة للمراجعة الإدارية بنجاح')
-    } catch (error) {
-      toast.error('حدث خطأ في إرسال الوظيفة')
-    }
-  }
 
-  const resetJobForm = () => {
-    setJobForm({
-      title: '',
-      department: '',
-      location: '',
-      type: '',
-      salary: '',
-      description: '',
-      requirements: '',
-      skills: '',
-      experience: '',
-      education: '',
-      benefits: '',
-      companyDescription: '',
-      workingHours: '',
-      remote: false,
-      urgent: false,
-      featured: false
-    })
-  }
 
   const handleTalentSearch = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -1640,227 +1571,16 @@ function EmployerDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Enhanced Job Posting Modal */}
-        {showJobForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                    <Plus className="w-6 h-6 ml-2 text-blue-600" />
-                    نشر وظيفة جديدة
-                  </h2>
-                  <Button variant="ghost" onClick={() => setShowJobForm(false)}>
-                    <XCircle className="w-5 h-5" />
-                  </Button>
-                </div>
-
-                <form onSubmit={handleJobSubmit} className="space-y-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 flex items-center">
-                      <Briefcase className="w-4 h-4 ml-2" />
-                      المعلومات الأساسية
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">المسمى الوظيفي *</label>
-                        <Input 
-                          value={jobForm.title}
-                          onChange={(e) => setJobForm(prev => ({ ...prev, title: e.target.value }))}
-                          placeholder="مثل: مطور برمجيات أول" 
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">القسم *</label>
-                        <Select value={jobForm.department} onValueChange={(value) => setJobForm(prev => ({ ...prev, department: value }))} required>
-                          <SelectTrigger>
-                            <SelectValue placeholder="اختر القسم" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Engineering">الهندسة والتطوير</SelectItem>
-                            <SelectItem value="Marketing">التسويق</SelectItem>
-                            <SelectItem value="Sales">المبيعات</SelectItem>
-                            <SelectItem value="Design">التصميم</SelectItem>
-                            <SelectItem value="HR">الموارد البشرية</SelectItem>
-                            <SelectItem value="Finance">المالية</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">الموقع *</label>
-                        <Input 
-                          value={jobForm.location}
-                          onChange={(e) => setJobForm(prev => ({ ...prev, location: e.target.value }))}
-                          placeholder="مثل: دبي، الإمارات" 
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">نوع الوظيفة *</label>
-                        <Select value={jobForm.type} onValueChange={(value) => setJobForm(prev => ({ ...prev, type: value }))} required>
-                          <SelectTrigger>
-                            <SelectValue placeholder="اختر النوع" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Full-time">دوام كامل</SelectItem>
-                            <SelectItem value="Part-time">دوام جزئي</SelectItem>
-                            <SelectItem value="Contract">عقد</SelectItem>
-                            <SelectItem value="Freelance">عمل حر</SelectItem>
-                            <SelectItem value="Internship">تدريب</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">نطاق الراتب *</label>
-                        <Input 
-                          value={jobForm.salary}
-                          onChange={(e) => setJobForm(prev => ({ ...prev, salary: e.target.value }))}
-                          placeholder="مثل: 10,000 - 15,000 درهم" 
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">ساعات العمل</label>
-                        <Input 
-                          value={jobForm.workingHours}
-                          onChange={(e) => setJobForm(prev => ({ ...prev, workingHours: e.target.value }))}
-                          placeholder="مثل: 9:00 ص - 6:00 م" 
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Job Details */}
-                  <div className="space-y-4 p-4 bg-green-50 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 flex items-center">
-                      <FileText className="w-4 h-4 ml-2" />
-                      تفاصيل الوظيفة
-                    </h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">وصف الوظيفة *</label>
-                      <Textarea 
-                        value={jobForm.description}
-                        onChange={(e) => setJobForm(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="اكتب وصفاً مفصلاً للوظيفة والمسؤوليات..."
-                        rows={6}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">المتطلبات والمؤهلات *</label>
-                      <Textarea 
-                        value={jobForm.requirements}
-                        onChange={(e) => setJobForm(prev => ({ ...prev, requirements: e.target.value }))}
-                        placeholder="اذكر المتطلبات والمؤهلات المطلوبة..."
-                        rows={4}
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">المهارات المطلوبة *</label>
-                        <Input 
-                          value={jobForm.skills}
-                          onChange={(e) => setJobForm(prev => ({ ...prev, skills: e.target.value }))}
-                          placeholder="مثل: React, Node.js, TypeScript" 
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">سنوات الخبرة المطلوبة</label>
-                        <Input 
-                          value={jobForm.experience}
-                          onChange={(e) => setJobForm(prev => ({ ...prev, experience: e.target.value }))}
-                          placeholder="مثل: 3-5 سنوات" 
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Additional Information */}
-                  <div className="space-y-4 p-4 bg-purple-50 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 flex items-center">
-                      <Star className="w-4 h-4 ml-2" />
-                      معلومات إضافية
-                    </h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">المزايا والفوائد</label>
-                      <Textarea 
-                        value={jobForm.benefits}
-                        onChange={(e) => setJobForm(prev => ({ ...prev, benefits: e.target.value }))}
-                        placeholder="اذكر المزايا والفوائد المقدمة..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">وصف الشركة</label>
-                      <Textarea 
-                        value={jobForm.companyDescription}
-                        onChange={(e) => setJobForm(prev => ({ ...prev, companyDescription: e.target.value }))}
-                        placeholder="نبذة عن الشركة وثقافتها..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap gap-4">
-                      <div className="flex items-center space-x-2 space-x-reverse">
-                        <Checkbox 
-                          id="remote" 
-                          checked={jobForm.remote}
-                          onCheckedChange={(checked) => setJobForm(prev => ({ ...prev, remote: !!checked }))}
-                        />
-                        <label htmlFor="remote" className="text-sm font-medium">
-                          العمل عن بُعد متاح
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2 space-x-reverse">
-                        <Checkbox 
-                          id="urgent" 
-                          checked={jobForm.urgent}
-                          onCheckedChange={(checked) => setJobForm(prev => ({ ...prev, urgent: !!checked }))}
-                        />
-                        <label htmlFor="urgent" className="text-sm font-medium">
-                          وظيفة عاجلة
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2 space-x-reverse">
-                        <Checkbox 
-                          id="featured" 
-                          checked={jobForm.featured}
-                          onCheckedChange={(checked) => setJobForm(prev => ({ ...prev, featured: !!checked }))}
-                        />
-                        <label htmlFor="featured" className="text-sm font-medium">
-                          وظيفة مميزة
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 space-x-reverse pt-6 border-t">
-                    <Button type="button" variant="outline" onClick={() => setShowJobForm(false)}>
-                      إلغاء
-                    </Button>
-                    <Button type="submit" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      <Send className="w-4 h-4 ml-2" />
-                      إرسال للمراجعة الإدارية
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Professional Job Posting Modal */}
+        <CreateJobModal 
+          isOpen={showJobForm}
+          onClose={() => setShowJobForm(false)}
+          onSuccess={() => {
+            toast.success('تم إرسال الوظيفة للمراجعة بنجاح!')
+            // Refresh jobs list here if needed
+          }}
+          companyId={1} // Replace with actual company ID from user
+        />
       </div>
     </div>
   )
